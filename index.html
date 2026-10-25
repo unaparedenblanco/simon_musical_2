@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simon Musical</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #1a1e29;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fffffe;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 10px;
+      /* Permet l'scroll quan el contingut supera la pantalla */
+      overflow-y: auto;
+    }
+
+    /* Reducció de dimensions de la finestra principal de l'app */
+    #contenedor-simon {
+      background: #232946;
+      padding: 20px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 480px; /* Mida més compacta */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      color: #fffffe;
+    }
+
+    .panell-info {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+      color: #b8c1ec;
+    }
+
+    .panell-info span {
+      color: #eebbc3;
+      font-weight: bold;
+    }
+
+    /* Reducció de mida de la graella de botons */
+    #rejilla-notas {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 400px) {
+      #rejilla-notas {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .boton-musical {
+      height: 65px; /* Alçada reduïda */
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      transition: transform 0.1s, filter 0.1s;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .boton-musical span.tecla {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .boton-musical:active {
+      transform: scale(0.95);
+    }
+
+    .boton-musical.iluminado {
+      filter: brightness(2) !important;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px currentColor;
+    }
+
+    /* Botó principal */
+    #boton-inicio {
+      background: #eebbc3;
+      color: #232946;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.95rem;
+      transition: background 0.2s, transform 0.1s;
+      width: 100%;
+    }
+
+    #boton-inicio:hover {
+      background: #d4a3b3;
+    }
+
+    #boton-inicio:active {
+      transform: scale(0.98);
+    }
+
+    /* Modal per al final de joc */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      padding: 20px;
+    }
+
+    .modal-contenido {
+      background: #232946;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 320px;
+      width: 100%;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-contenido h2 {
+      color: #e74c3c;
+      margin-bottom: 10px;
+    }
+
+    .modal-contenido p {
+      margin-bottom: 15px;
+      color: #b8c1ec;
+    }
+
+    .modal-contenido button {
+      background: #2ecc71;
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div id="contenedor-simon">
+  <h1>🎵 Simon Musical 🎵</h1>
+  
+  <div class="panell-info">
+    <div>Ronda: <span id="contador-ronda">0</span></div>
+    <div>Rècord: <span id="contador-record">0</span></div>
+  </div>
+  
+  <div id="rejilla-notas">
+    <button class="boton-musical" data-note="C4" data-key="1" style="background: #e74c3c;">Do <span class="tecla">(1)</span></button>
+    <button class="boton-musical" data-note="D4" data-key="2" style="background: #f39c12;">Re <span class="tecla">(2)</span></button>
+    <button class="boton-musical" data-note="E4" data-key="3" style="background: #f1c40f;">Mi <span class="tecla">(3)</span></button>
+    <button class="boton-musical" data-note="F4" data-key="4" style="background: #2ecc71;">Fa <span class="tecla">(4)</span></button>
+    <button class="boton-musical" data-note="G4" data-key="5" style="background: #1abc9c;">Sol <span class="tecla">(5)</span></button>
+    <button class="boton-musical" data-note="A4" data-key="6" style="background: #3498db;">La <span class="tecla">(6)</span></button>
+    <button class="boton-musical" data-note="B4" data-key="7" style="background: #9b59b6;">Si <span class="tecla">(7)</span></button>
+    <button class="boton-musical" data-note="C5" data-key="8" style="background: #e91e63;">Do <span class="tecla">(8)</span></button>
+  </div>
+
+  <button id="boton-inicio">▶️ COMENÇAR JOC</button>
+</div>
+
+<!-- Modal de final de joc -->
+<div id="modal-gameover" class="modal">
+  <div class="modal-contenido">
+    <h2>¡Has fallat!</h2>
+    <p>Ronda aconseguida: <span id="modal-ronda">0</span></p>
+    <button id="btn-reintentar">Tornar a jugar</button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const botones = document.querySelectorAll('.boton-musical');
+    const txtRonda = document.getElementById('contador-ronda');
+    const txtRecord = document.getElementById('contador-record');
+    const btnInicio = document.getElementById('boton-inicio');
+    const modal = document.getElementById('modal-gameover');
+    const modalRonda = document.getElementById('modal-ronda');
+    const btnReintentar = document.getElementById('btn-reintentar');
+    
+    let audioCtx = null;
+    let secuencia = [];
+    let pasosUsuario = [];
+    let bloqueado = false;
+    let maxRecord = 0;
+
+    const frecuencias = {
+      C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23,
+      G4: 392.00, A4: 440.00, B4: 493.88, C5: 523.25
+    };
+
+    // Mapeig de tecles numèriques a notes
+    const mapaTecles = {
+      '1': 'C4', '2': 'D4', '3': 'E4', '4': 'F4',
+      '5': 'G4', '6': 'A4', '7': 'B4', '8': 'C5'
+    };
+
+    function sonarNota(nota) {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(frecuencias[nota], audioCtx.currentTime);
+      
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.4);
+
+      const btn = Array.from(botones).find(b => b.dataset.note === nota);
+      if (btn) {
+        btn.classList.add('iluminado');
+        setTimeout(() => btn.classList.remove('iluminado'), 300);
+      }
+    }
+
+    function reproducirSecuencia() {
+      bloqueado = true;
+      let i = 0;
+      const intervalo = setInterval(() => {
+        sonarNota(secuencia[i]);
+        i++;
+        if (i >= secuencia.length) {
+          clearInterval(intervalo);
+          bloqueado = false;
+          pasosUsuario = [];
+        }
+      }, 700);
+    }
+
+    function processarNota(nota) {
+      if (bloqueado || secuencia.length === 0) return;
+
+      sonarNota(nota);
+      pasosUsuario.push(nota);
+
+      const index = pasosUsuario.length - 1;
+      if (pasosUsuario[index] !== secuencia[index]) {
+        const puntuacionFinal = secuencia.length - 1;
+        if (puntuacionFinal > maxRecord) {
+          maxRecord = puntuacionFinal;
+          txtRecord.textContent = maxRecord;
+        }
+        modalRonda.textContent = puntuacionFinal;
+        modal.style.display = 'flex';
+        secuencia = [];
+        txtRonda.textContent = "0";
+        return;
+      }
+
+      if (pasosUsuario.length === secuencia.length) {
+        bloqueado = true;
+        setTimeout(() => {
+          const notasDisp = Object.keys(frecuencias);
+          secuencia.push(notasDisp[Math.floor(Math.random() * notasDisp.length)]);
+          txtRonda.textContent = secuencia.length;
+          reproducirSecuencia();
+        }, 900);
+      }
+    }
+
+    function manejarClick(e) {
+      const btn = e.target.closest('.boton-musical');
+      if (!btn) return;
+      processarNota(btn.dataset.note);
+    }
+
+    // Escolta d'esdeveniments de teclat
+    window.addEventListener('keydown', (e) => {
+      if (mapaTecles[e.key]) {
+        processarNota(mapaTecles[e.key]);
+      }
+    });
+
+    botones.forEach(b => b.onclick = manejarClick);
+
+    function iniciarJuego() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      modal.style.display = 'none';
+      secuencia = [];
+      const notasDisp = Object.keys(frecuencias);
+      secuencia.push(notasDisp[Math.floor(Math.random() * notasDisp.length)]);
+      txtRonda.textContent = "1";
+      reproducirSecuencia();
+    }
+
+    btnInicio.onclick = iniciarJuego;
+    btnReintentar.onclick = iniciarJuego;
+  })();
+</script>
+
+</body>
+</html>
